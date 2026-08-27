@@ -19,10 +19,19 @@ import { Panel } from '@/components/panel'
 import { StatusBadge } from '@/components/status-badge'
 import { dailyOrders, fleetDistribution, performanceSeries, trucks } from '@/lib/data'
 
+const CHART = {
+  primary: '#2E8B57',
+  warning: '#c2740b',
+  destructive: '#dc2626',
+  muted: '#6b7280',
+  border: '#e2e5ea',
+  card: '#ffffff',
+}
+
 const fleetLabels: Record<string, { ar: string; en: string; color: string }> = {
-  active: { ar: 'نشطة', en: 'Active', color: 'hsl(var(--primary))' },
-  idle: { ar: 'متوقفة', en: 'Idle', color: 'hsl(var(--muted-foreground))' },
-  maintenance: { ar: 'صيانة', en: 'Maintenance', color: 'hsl(var(--warning))' },
+  active: { ar: 'نشطة', en: 'Active', color: CHART.primary },
+  idle: { ar: 'متوقفة', en: 'Idle', color: CHART.muted },
+  maintenance: { ar: 'صيانة', en: 'Maintenance', color: CHART.warning },
 }
 
 function Kpi({
@@ -118,13 +127,13 @@ export function DashboardOverview() {
           <div className="mt-4 h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={performanceSeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="time" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <CartesianGrid strokeDasharray="3 3" stroke=CHART.border />
+                <XAxis dataKey="time" stroke=CHART.muted fontSize={11} />
+                <YAxis stroke=CHART.muted fontSize={11} />
                 <Tooltip
                   contentStyle={{
-                    background: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
+                    background: CHART.card,
+                    border: `1px solid ${CHART.border}`,
                     borderRadius: 12,
                     fontSize: 12,
                   }}
@@ -132,8 +141,8 @@ export function DashboardOverview() {
                 <Area
                   type="monotone"
                   dataKey="onTime"
-                  stroke="hsl(var(--primary))"
-                  fill="hsl(var(--primary))"
+                  stroke=CHART.primary
+                  fill=CHART.primary
                   fillOpacity={0.18}
                   strokeWidth={2}
                   name={ar ? 'في الوقت' : 'On time'}
@@ -141,8 +150,8 @@ export function DashboardOverview() {
                 <Area
                   type="monotone"
                   dataKey="delayed"
-                  stroke="hsl(var(--warning))"
-                  fill="hsl(var(--warning))"
+                  stroke=CHART.warning
+                  fill=CHART.warning
                   fillOpacity={0.14}
                   strokeWidth={2}
                   name={ar ? 'تأخير' : 'Delayed'}
@@ -199,18 +208,18 @@ export function DashboardOverview() {
           <div className="mt-4 h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dailyOrders.map((d) => ({ ...d, label: d.day[lang] }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <CartesianGrid strokeDasharray="3 3" stroke=CHART.border />
+                <XAxis dataKey="label" stroke=CHART.muted fontSize={11} />
+                <YAxis stroke=CHART.muted fontSize={11} />
                 <Tooltip
                   contentStyle={{
-                    background: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
+                    background: CHART.card,
+                    border: `1px solid ${CHART.border}`,
                     borderRadius: 12,
                     fontSize: 12,
                   }}
                 />
-                <Bar dataKey="orders" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="orders" fill=CHART.primary radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
