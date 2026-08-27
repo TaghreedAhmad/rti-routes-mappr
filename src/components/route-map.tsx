@@ -166,7 +166,11 @@ export const RouteMap = forwardRef<
     const apiKey = import.meta.env['VITE_GOOGLE_MAPS_API_KEY'] ?? import.meta.env['VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY']
 
     async function initialize() {
-      if (!apiKey || !containerRef.current) {
+      if (!apiKey) {
+        setLoadState('missing-key')
+        return
+      }
+      if (!containerRef.current) {
         setLoadState('error')
         return
       }
