@@ -318,29 +318,67 @@ export const RouteMap = forwardRef<
     // routeVersion re-applies selection after asynchronous Directions results arrive.
   }, [selectedId, lang, loadState, routeVersion])
 
-  const errorText = lang === 'ar'
-    ? 'تعذر تحميل Google Maps. تحقق من تفعيل Maps JavaScript API وDirections API للمفتاح.'
-    : 'Google Maps could not load. Check that Maps JavaScript API and Directions API are enabled.'
-  const routesWarning = lang === 'ar'
+  const isAr = lang === 'ar'
+
+  const messages = (() => {
+    switch (loadState) {
+      case 'missing-key':
+        return {
+          title: isAr ? 'مفتاح Google Maps غير مُعد' : 'Google Maps API key is not set',
+          body: isAr
+            ? 'المتغير VITE_GOOGLE_MAPS_API_KEY غير موجود في بيئة التطبيق. أضفه في إعدادات بيئة منصة Lovable (يبدأ الاسم بـ VITE_)، وتأكد أن المفتاح مُفعّل عليه Maps JavaScript API وDirections API.'
+            : 'The VITE_GOOGLE_MAPS_API_KEY environment variable is missing. Add it in the Lovable environment settings (the name must start with VITE_), and make sure the key has Maps JavaScript API and Directions API enabled.',
+        }
+      case 'maps-error':
+        return {
+          title: isAr ? 'تعذر تحميل خرائط Google' : 'Could not load Google Maps',
+          body: isAr
+            ? 'المفتاح موجود لكن Maps JavaScript API لم يتم تحميله. تأكد أن المفتاح صالح وأن Maps JavaScript API مُفعّل له في Google Cloud Console، وأن قيود المرجع (HTTP referrer) تسمح بهذا النطاق.'
+            : 'The key is present but the Maps JavaScript API failed to load. Verify the key is valid, that Maps JavaScript API is enabled for it in Google Cloud Console, and that its HTTP referrer restrictions allow this domain.',
+        }
+      case 'error':
+        return {
+          title: isAr ? 'تعذر تحميل Google Maps' : 'Google Maps could not load',
+          body: isAr
+            ? 'حدث خطأ غير متوقع أثناء تهيئة الخريطة. تحقق من تفعيل Maps JavaScript API وDirections API للمفتاح.'
+            : 'An unexpected error occurred while initializing the map. Check that Maps JavaScript API and Directions API are enabled for the key.',
+        }
+      default:
+        return null
+    }
+  })()
+
+  const allRoutesFailed = loadState === 'ready' && routeTotal > 0 && routeFailures >= routeTotal
+  const routesWarning = isAr
     ? `تعذر تحميل ${routeFailures} من المسارات عبر Directions API.`
     : `${routeFailures} routes could not be loaded from Directions API.`
+  const directionsDisabledWarning = isAr
+    ? 'تعذر تحميل جميع المسارات. يبدو أن Directions API غير مُفعّل لهذا المفتاح — فعّله في Google Cloud Console.'
+    : 'All routes failed to load. Directions API appears not to be enabled for this key — enable it in Google Cloud Console.'
 
   return (
-    <div className="relative h-full w-full" aria-label={lang === 'ar' ? 'خريطة أسطول جدة' : 'Jeddah fleet map'}>
+    <div className="relative h-full w-full" aria-label={isAr ? 'خريطة أسطول جدة' : 'Jeddah fleet map'}>
       <div ref={containerRef} className="h-full w-full" />
       {loadState === 'loading' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-muted text-muted-foreground">
           <LoaderCircle className="size-7 animate-spin text-primary" />
-          <span className="text-sm font-medium">{lang === 'ar' ? 'جاري تحميل خريطة Google…' : 'Loading Google Maps…'}</span>
+          <span className="text-sm font-medium">{isAr ? 'جاري تحميل خريطة Google…' : 'Loading Google Maps…'}</span>
         </div>
       )}
-      {loadState === 'error' && (
+      {messages && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-muted px-6 text-center">
           <span className="flex size-12 items-center justify-center rounded-full bg-destructive/10 text-destructive"><MapPinned className="size-6" /></span>
-          <p className="max-w-sm text-sm font-medium leading-6 text-foreground">{errorText}</p>
+          <p className="max-w-sm text-sm font-bold leading-6 text-foreground">{messages.title}</p>
+          <p className="max-w-sm text-xs font-medium leading-6 text-muted-foreground">{messages.body}</p>
         </div>
       )}
-      {loadState === 'ready' && routeFailures > 0 && (
+      {loadState === 'ready' && allRoutesFailed && (
+        <div className="absolute top-3 z-10 flex items-center gap-2 rounded-lg border border-destructive/30 bg-card/95 px-3 py-2 text-xs font-medium text-foreground shadow-lg backdrop-blur ltr:left-3 rtl:right-3">
+          <TriangleAlert className="size-4 text-destructive" />
+          {directionsDisabledWarning}
+        </div>
+      )}
+      {loadState === 'ready' && routeFailures > 0 && !allRoutesFailed && (
         <div className="absolute top-3 z-10 flex items-center gap-2 rounded-lg border border-warning/30 bg-card/95 px-3 py-2 text-xs font-medium text-foreground shadow-lg backdrop-blur ltr:left-3 rtl:right-3">
           <TriangleAlert className="size-4 text-warning" />
           {routesWarning}
