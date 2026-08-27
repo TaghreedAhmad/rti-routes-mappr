@@ -260,6 +260,7 @@ export const RouteMap = forwardRef<
         }))
 
         if (cancelled) return
+        setRouteTotal(trucks.length)
         setRouteFailures(failures)
         setRouteVersion((value) => value + 1)
         map.fitBounds(bounds, 55)
