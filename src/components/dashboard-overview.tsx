@@ -139,6 +139,7 @@ export function DashboardOverview() {
                   }}
                 />
                 <Area
+                  isAnimationActive={false}
                   type="monotone"
                   dataKey="onTime"
                   stroke=CHART.primary
@@ -148,6 +149,7 @@ export function DashboardOverview() {
                   name={ar ? 'في الوقت' : 'On time'}
                 />
                 <Area
+                  isAnimationActive={false}
                   type="monotone"
                   dataKey="delayed"
                   stroke=CHART.warning
@@ -169,16 +171,19 @@ export function DashboardOverview() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={fleetDistribution}
+                  isAnimationActive={false}
+                  data={fleetDistribution.filter((d) => d.value > 0)}
                   dataKey="value"
                   nameKey="key"
                   innerRadius={45}
                   outerRadius={72}
                   paddingAngle={2}
                 >
-                  {fleetDistribution.map((entry) => (
-                    <Cell key={entry.key} fill={fleetLabels[entry.key]?.color} />
-                  ))}
+                  {fleetDistribution
+                    .filter((d) => d.value > 0)
+                    .map((entry) => (
+                      <Cell key={entry.key} fill={fleetLabels[entry.key]?.color} />
+                    ))}
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
@@ -219,7 +224,7 @@ export function DashboardOverview() {
                     fontSize: 12,
                   }}
                 />
-                <Bar dataKey="orders" fill=CHART.primary radius={[8, 8, 0, 0]} />
+                <Bar isAnimationActive={false} dataKey="orders" fill=CHART.primary radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
