@@ -177,20 +177,22 @@ export const RouteMap = forwardRef<
 
       try {
         configureLoader(apiKey)
-        let mapsLib: typeof google.maps
-        let routesLib: typeof google.maps
+        let Map: typeof google.maps.Map
+        let InfoWindow: typeof google.maps.InfoWindow
+        let DirectionsService: typeof google.maps.DirectionsService
+        let DirectionsRenderer: typeof google.maps.DirectionsRenderer
         try {
-          ;[mapsLib, routesLib] = await Promise.all([
+          const [maps, routes] = await Promise.all([
             importLibrary('maps'),
             importLibrary('routes'),
-          ]) as [typeof google.maps, typeof google.maps]
+          ])
+          ;({ Map, InfoWindow } = maps as typeof google.maps)
+          ;({ DirectionsService, DirectionsRenderer } = routes as typeof google.maps)
         } catch {
           if (!cancelled) setLoadState('maps-error')
           return
         }
         if (cancelled || !containerRef.current) return
-        const { Map, InfoWindow } = mapsLib
-        const { DirectionsService, DirectionsRenderer } = routesLib
 
         const isDark = document.documentElement.classList.contains('dark')
         const map = new Map(containerRef.current, {
