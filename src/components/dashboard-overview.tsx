@@ -127,9 +127,9 @@ export function DashboardOverview() {
           <div className="mt-4 h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={performanceSeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke=CHART.border />
-                <XAxis dataKey="time" stroke=CHART.muted fontSize={11} />
-                <YAxis stroke=CHART.muted fontSize={11} />
+                <CartesianGrid strokeDasharray="3 3" stroke={CHART.border} />
+                <XAxis dataKey="time" stroke={CHART.muted} fontSize={11} />
+                <YAxis stroke={CHART.muted} fontSize={11} />
                 <Tooltip
                   contentStyle={{
                     background: CHART.card,
@@ -142,8 +142,8 @@ export function DashboardOverview() {
                   isAnimationActive={false}
                   type="monotone"
                   dataKey="onTime"
-                  stroke=CHART.primary
-                  fill=CHART.primary
+                  stroke={CHART.primary}
+                  fill={CHART.primary}
                   fillOpacity={0.18}
                   strokeWidth={2}
                   name={ar ? 'في الوقت' : 'On time'}
@@ -152,8 +152,8 @@ export function DashboardOverview() {
                   isAnimationActive={false}
                   type="monotone"
                   dataKey="delayed"
-                  stroke=CHART.warning
-                  fill=CHART.warning
+                  stroke={CHART.warning}
+                  fill={CHART.warning}
                   fillOpacity={0.14}
                   strokeWidth={2}
                   name={ar ? 'تأخير' : 'Delayed'}
@@ -213,9 +213,9 @@ export function DashboardOverview() {
           <div className="mt-4 h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dailyOrders.map((d) => ({ ...d, label: d.day[lang] }))}>
-                <CartesianGrid strokeDasharray="3 3" stroke=CHART.border />
-                <XAxis dataKey="label" stroke=CHART.muted fontSize={11} />
-                <YAxis stroke=CHART.muted fontSize={11} />
+                <CartesianGrid strokeDasharray="3 3" stroke={CHART.border} />
+                <XAxis dataKey="label" stroke={CHART.muted} fontSize={11} />
+                <YAxis stroke={CHART.muted} fontSize={11} />
                 <Tooltip
                   contentStyle={{
                     background: CHART.card,
@@ -224,7 +224,7 @@ export function DashboardOverview() {
                     fontSize: 12,
                   }}
                 />
-                <Bar isAnimationActive={false} dataKey="orders" fill=CHART.primary radius={[8, 8, 0, 0]} />
+                <Bar isAnimationActive={false} dataKey="orders" fill={CHART.primary} radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
