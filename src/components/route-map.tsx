@@ -122,8 +122,11 @@ export const RouteMap = forwardRef<
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null)
   const allBoundsRef = useRef<google.maps.LatLngBounds | null>(null)
   const selectRef = useRef(onSelect)
-  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [loadState, setLoadState] = useState<
+    'loading' | 'ready' | 'missing-key' | 'maps-error' | 'error'
+  >('loading')
   const [routeFailures, setRouteFailures] = useState(0)
+  const [routeTotal, setRouteTotal] = useState(0)
   const [routeVersion, setRouteVersion] = useState(0)
   selectRef.current = onSelect
 
