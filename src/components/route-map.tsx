@@ -186,8 +186,8 @@ export const RouteMap = forwardRef<
             importLibrary('maps'),
             importLibrary('routes'),
           ])
-          ;({ Map, InfoWindow } = maps as typeof google.maps)
-          ;({ DirectionsService, DirectionsRenderer } = routes as typeof google.maps)
+          ;({ Map, InfoWindow } = maps as unknown as typeof google.maps)
+          ;({ DirectionsService, DirectionsRenderer } = routes as unknown as typeof google.maps)
         } catch {
           if (!cancelled) setLoadState('maps-error')
           return
