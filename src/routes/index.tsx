@@ -1,11 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AppProviders } from "@/components/app-providers";
-import { TopHeader } from "@/components/top-header";
-import { RouteReview } from "@/components/route-review";
+import { AppShell } from "@/components/app-shell";
+import { DashboardOverview } from "@/components/dashboard-overview";
 
-const title = "Kinza VRP Engine — مراجعة مسارات أسطول جدة";
+const title = "Kinza VRP Engine — لوحة تحكم لوجستيات جدة";
 const description =
-  "منصة كنزة لتحسين المسارات: متابعة حية لشاحنات التوزيع ومساراتها في جدة على خريطة Google، بالعربية والإنجليزية.";
+  "لوحة تحكم كنزة لتحسين المسارات: مؤشرات الالتزام بالوقت، التوقفات المنفذة، توزيع الأسطول وتنبيهات التشغيل في جدة.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,13 +22,8 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <AppProviders>
-      <main className="flex h-screen flex-col overflow-hidden bg-background">
-        <TopHeader />
-        <div className="min-h-0 flex-1 overflow-auto">
-          <RouteReview />
-        </div>
-      </main>
-    </AppProviders>
+    <AppShell>
+      <DashboardOverview />
+    </AppShell>
   );
 }
