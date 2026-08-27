@@ -28,7 +28,7 @@ const config: Record<
   },
 }
 
-export function StatusBadge({ status, label }: { status: TruckStatus; label?: string }) {
+export function StatusBadge({ status, label }: { status: TruckStatus; label?: string | undefined }) {
   const { lang } = useApp()
   const entry = config[status]
   const Icon = entry.icon

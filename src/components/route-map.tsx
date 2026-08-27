@@ -61,7 +61,7 @@ function escapeHtml(value: string) {
       "'": '&#39;',
       '"': '&quot;',
     }
-    return entities[character]
+    return entities[character] ?? character
   })
 }
 
@@ -160,7 +160,7 @@ export const RouteMap = forwardRef<
 
   useEffect(() => {
     let cancelled = false
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY
+    const apiKey = import.meta.env['VITE_GOOGLE_MAPS_API_KEY'] ?? import.meta.env['VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY']
 
     async function initialize() {
       if (!apiKey || !containerRef.current) {
