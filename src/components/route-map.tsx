@@ -145,7 +145,7 @@ export const RouteMap = forwardRef<
     const marker = markersRef.current[id]
     if (!truck || !map || !marker) return
 
-    const routeBounds = routesRef.current[id]?.routes[0]?.bounds
+    const routeBounds = routesRef.current[id]?.bounds
     if (routeBounds) map.fitBounds(routeBounds, 70)
     else {
       map.panTo({ lat: truck.lat, lng: truck.lng })
@@ -188,15 +188,9 @@ export const RouteMap = forwardRef<
         configureLoader(apiKey)
         let Map: typeof google.maps.Map
         let InfoWindow: typeof google.maps.InfoWindow
-        let DirectionsService: typeof google.maps.DirectionsService
-        let DirectionsRenderer: typeof google.maps.DirectionsRenderer
         try {
-          const [maps, routes] = await Promise.all([
-            importLibrary('maps'),
-            importLibrary('routes'),
-          ])
+          const maps = await importLibrary('maps')
           ;({ Map, InfoWindow } = maps as unknown as typeof google.maps)
-          ;({ DirectionsService, DirectionsRenderer } = routes as unknown as typeof google.maps)
         } catch {
           if (!cancelled) setLoadState('maps-error')
           return
@@ -232,46 +226,44 @@ export const RouteMap = forwardRef<
           bounds.extend(marker.getPosition()!)
         })
 
-        const directionsService = new DirectionsService()
+        // Routes come from the free OSRM service; Google Maps only renders them.
         let failures = 0
+        const metrics: RouteMetrics = {}
         await Promise.all(trucks.map(async (truck) => {
-          try {
-            const result = await directionsService.route({
-              origin: truck.route.origin,
-              destination: truck.route.destination,
-              waypoints: truck.route.waypoints.map((location) => ({ location, stopover: true })),
-              optimizeWaypoints: false,
-              travelMode: google.maps.TravelMode.DRIVING,
-              region: 'SA',
-            })
-            if (cancelled) return
-            routesRef.current[truck.id] = result
-            const renderer = new DirectionsRenderer({
-              map,
-              directions: result,
-              suppressMarkers: true,
-              preserveViewport: true,
-              polylineOptions: {
-                strokeColor: truck.identityColor,
-                strokeOpacity: 0.82,
-                strokeWeight: 5,
-              },
-            })
-            renderersRef.current[truck.id] = renderer
-            const routeBounds = result.routes[0]?.bounds
-            if (routeBounds) {
-              bounds.extend(routeBounds.getNorthEast())
-              bounds.extend(routeBounds.getSouthWest())
-            }
-          } catch {
+          const route = await fetchOsrmRoute([
+            truck.route.origin,
+            ...truck.route.waypoints,
+            truck.route.destination,
+          ])
+          if (cancelled) return
+          if (!route) {
             failures += 1
+            return
           }
+
+          const routeBounds = new google.maps.LatLngBounds()
+          route.path.forEach((point) => routeBounds.extend(point))
+          routesRef.current[truck.id] = { bounds: routeBounds, route }
+          metrics[truck.id] = { distance: route.distance, duration: route.duration }
+
+          const polyline = new google.maps.Polyline({
+            map,
+            path: route.path,
+            geodesic: false,
+            strokeColor: truck.identityColor,
+            strokeOpacity: 0.82,
+            strokeWeight: 5,
+          })
+          renderersRef.current[truck.id] = polyline
+          bounds.extend(routeBounds.getNorthEast())
+          bounds.extend(routeBounds.getSouthWest())
         }))
 
         if (cancelled) return
         setRouteTotal(trucks.length)
         setRouteFailures(failures)
         setRouteVersion((value) => value + 1)
+        onMetricsRef.current?.(metrics)
         map.fitBounds(bounds, 55)
         setLoadState('ready')
 
