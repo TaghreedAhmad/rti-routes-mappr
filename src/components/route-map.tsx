@@ -9,6 +9,7 @@ import {
 import { importLibrary, setOptions } from '@googlemaps/js-api-loader'
 import { LoaderCircle, MapPinned, TriangleAlert } from 'lucide-react'
 import { JEDDAH_CENTER, trucks, type Truck, type TruckStatus } from '@/lib/data'
+import { fetchOsrmRoute, type OsrmRoute } from '@/lib/osrm'
 import type { Lang } from '@/lib/i18n'
 
 export type RouteMapHandle = {
@@ -16,8 +17,11 @@ export type RouteMapHandle = {
   recenter: () => void
 }
 
-type RouteRecord = Record<string, google.maps.DirectionsResult>
-type RendererRecord = Record<string, google.maps.DirectionsRenderer>
+export type RouteMetrics = Record<string, { distance: number; duration: number }>
+
+type RouteRecord = Record<string, { bounds: google.maps.LatLngBounds; route: OsrmRoute }>
+type RendererRecord = Record<string, google.maps.Polyline>
+
 
 const statusColor: Record<TruckStatus, string> = {
   onTime: '#2e8b57',
