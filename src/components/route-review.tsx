@@ -15,7 +15,7 @@ import { formatDistance, formatDuration } from '@/lib/osrm'
 export function RouteReview() {
   const { t, lang } = useApp()
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [metrics, setMetrics] = useState<RouteMetrics>({})
+  const [metrics, setMetrics] = useState<RouteMetrics | null>(null)
   const mapRef = useRef<RouteMapHandle>(null)
   const handleMetrics = useCallback((next: RouteMetrics) => setMetrics(next), [])
 
@@ -59,7 +59,7 @@ export function RouteReview() {
             {trucks.map((truck) => {
               const active = truck.id === selectedId
               const progress = Math.round((truck.completed / truck.stops) * 100)
-              const metric = metrics[truck.id]
+              const metric = metrics?.[truck.id]
               return (
                 <li key={truck.id}>
                   <button
@@ -110,7 +110,7 @@ export function RouteReview() {
                         <Clock className="size-3.5 text-primary" />
                         {metric ? formatDuration(metric.duration, lang) : '—'}
                       </span>
-                      {!metric && (
+                      {metrics && !metric && (
                         <span className="text-destructive">
                           {lang === 'ar' ? 'تعذر حساب المسار' : 'Route unavailable'}
                         </span>
