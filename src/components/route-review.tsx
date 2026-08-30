@@ -41,7 +41,7 @@ export function RouteReview() {
         }
       />
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 lg:grid-cols-[340px_1fr]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 lg:grid-cols-[320px_1fr] xl:grid-cols-[300px_1fr_320px]">
         {/* Active routes list */}
         <Panel className="flex min-h-0 flex-col overflow-hidden">
           <div className="flex items-center justify-between border-b border-border px-5 py-4">
