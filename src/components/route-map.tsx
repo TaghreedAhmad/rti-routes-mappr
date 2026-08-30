@@ -138,6 +138,8 @@ export const RouteMap = forwardRef<
   const [routeTotal, setRouteTotal] = useState(0)
   const [routeVersion, setRouteVersion] = useState(0)
   selectRef.current = onSelect
+  const onMetricsRef = useRef(onMetrics)
+  onMetricsRef.current = onMetrics
 
   function showTruck(id: string) {
     const truck = trucks.find((item) => item.id === id)
@@ -305,12 +307,10 @@ export const RouteMap = forwardRef<
         opacity: selectedId && !selected ? 0.58 : 1,
       })
       renderersRef.current[truck.id]?.setOptions({
-        polylineOptions: {
-          strokeColor: truck.identityColor,
-          strokeOpacity: selectedId ? (selected ? 1 : 0.1) : 0.82,
-          strokeWeight: selected ? 7 : selectedId ? 3 : 5,
-          zIndex: selected ? 100 : 1,
-        },
+        strokeColor: truck.identityColor,
+        strokeOpacity: selectedId ? (selected ? 1 : 0.1) : 0.82,
+        strokeWeight: selected ? 7 : selectedId ? 3 : 5,
+        zIndex: selected ? 100 : 1,
       })
     })
 
