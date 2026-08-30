@@ -116,8 +116,13 @@ function infoWindowHtml(truck: Truck, lang: Lang) {
 
 export const RouteMap = forwardRef<
   RouteMapHandle,
-  { selectedId: string | null; onSelect: (id: string) => void; lang: Lang }
->(function RouteMap({ selectedId, onSelect, lang }, ref) {
+  {
+    selectedId: string | null
+    onSelect: (id: string) => void
+    lang: Lang
+    onMetrics?: (metrics: RouteMetrics) => void
+  }
+>(function RouteMap({ selectedId, onSelect, lang, onMetrics }, ref) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
   const markersRef = useRef<Record<string, google.maps.Marker>>({})
