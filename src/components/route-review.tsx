@@ -8,6 +8,7 @@ import { Panel } from '@/components/panel'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { RouteMap, type RouteMapHandle } from '@/components/route-map'
+import { OrderDetails } from '@/components/order-details'
 import { trucks } from '@/lib/data'
 
 export function RouteReview() {
