@@ -116,6 +116,11 @@ export function RouteReview() {
             </div>
           )}
         </Panel>
+
+        {/* Order details per stop */}
+        <div className="flex min-h-0 flex-col lg:col-span-2 xl:col-span-1">
+          <OrderDetails selectedId={selectedId} />
+        </div>
       </div>
     </div>
   )
