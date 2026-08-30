@@ -10,11 +10,11 @@ export function TopHeader() {
     <header className="flex items-center justify-between border-b border-border bg-card px-4 py-3 md:px-6">
       <div className="flex items-center gap-3">
         <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-sm font-black text-primary-foreground">
-          VRP
+          RTI
         </span>
         <div className="leading-tight">
           <div className="text-sm font-bold text-foreground">
-            {lang === 'ar' ? 'كنزة VRP' : 'Kinza VRP'}
+            RTI Route
           </div>
           <div className="text-[11px] text-muted-foreground">
             {lang === 'ar' ? 'محرك تحسين المسارات' : 'Route Optimization Engine'}

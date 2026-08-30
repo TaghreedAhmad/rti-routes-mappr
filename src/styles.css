@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Kinza VRP Engine design system — logistics white & green (#2E8B57).
+ * RTI Route design system — logistics white & green (#2E8B57).
  * Tokens are declared as HSL triplets so they can be reused with alpha
  * modifiers (e.g. bg-primary/10) exactly like the original project.
  */
