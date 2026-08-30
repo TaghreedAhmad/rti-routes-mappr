@@ -8,6 +8,7 @@ import { Panel } from '@/components/panel'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { RouteMap, type RouteMapHandle } from '@/components/route-map'
+import { OrderDetails } from '@/components/order-details'
 import { trucks } from '@/lib/data'
 
 export function RouteReview() {
@@ -41,7 +42,7 @@ export function RouteReview() {
         }
       />
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 lg:grid-cols-[340px_1fr]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 lg:grid-cols-[320px_1fr] xl:grid-cols-[300px_1fr_320px]">
         {/* Active routes list */}
         <Panel className="flex min-h-0 flex-col overflow-hidden">
           <div className="flex items-center justify-between border-b border-border px-5 py-4">
@@ -116,6 +117,11 @@ export function RouteReview() {
             </div>
           )}
         </Panel>
+
+        {/* Order details per stop */}
+        <div className="flex min-h-0 flex-col lg:col-span-2 xl:col-span-1">
+          <OrderDetails selectedId={selectedId} />
+        </div>
       </div>
     </div>
   )
