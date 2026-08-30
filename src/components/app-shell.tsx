@@ -30,8 +30,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           ))}
           <div className="mt-auto rounded-lg bg-muted p-3 text-[11px] leading-relaxed text-muted-foreground">
             {lang === 'ar'
-              ? 'محرك تحسين المسارات — بيانات أسطول جدة الحقيقية.'
-              : 'Route optimization engine — real Jeddah fleet data.'}
+              ? 'RTI Route — بيانات أسطول جدة الحقيقية.'
+              : 'RTI Route — real Jeddah fleet data.'}
           </div>
         </nav>
 

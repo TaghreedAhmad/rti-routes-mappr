@@ -2,9 +2,9 @@ import { createFileRoute } from '@tanstack/react-router'
 import { AppShell } from '@/components/app-shell'
 import { FleetTable } from '@/components/fleet-table'
 
-const title = 'الأسطول — Kinza VRP Engine Fleet'
+const title = 'الأسطول — RTI Route Fleet'
 const description =
-  'قائمة تفصيلية لشاحنات كنزة في جدة: السائق، الحالة، السرعة، الحمولة، الوقود، ووقت الوصول المتوقع.'
+  'قائمة تفصيلية لشاحنات RTI Route في جدة: السائق، الحالة، السرعة، الحمولة، الوقود، ووقت الوصول المتوقع.'
 
 export const Route = createFileRoute('/fleet')({
   head: () => ({

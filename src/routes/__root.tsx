@@ -78,10 +78,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Kinza VRP Engine" },
+      { title: "RTI Route" },
       { name: "description", content: "Logistics & Route Optimization Platform — Jeddah, Saudi Arabia" },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Kinza VRP Engine" },
+      { property: "og:title", content: "RTI Route" },
       { property: "og:description", content: "Logistics & Route Optimization Platform — Jeddah, Saudi Arabia" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

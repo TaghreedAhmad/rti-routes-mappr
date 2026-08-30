@@ -2,9 +2,9 @@ import { createFileRoute } from '@tanstack/react-router'
 import { AppShell } from '@/components/app-shell'
 import { RouteReview } from '@/components/route-review'
 
-const title = 'مراجعة المسارات — Kinza VRP Route Review'
+const title = 'مراجعة المسارات — RTI Route Review'
 const description =
-  'متابعة حية لشاحنات كنزة ومساراتها في جدة على خريطة Google مع رسم المسار عند اختيار أي شاحنة.'
+  'متابعة حية لشاحنات RTI Route ومساراتها في جدة على خريطة Google مع رسم المسار عند اختيار أي شاحنة.'
 
 export const Route = createFileRoute('/routes')({
   head: () => ({
