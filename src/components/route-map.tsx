@@ -327,8 +327,8 @@ export const RouteMap = forwardRef<
         return {
           title: isAr ? 'مفتاح Google Maps غير مُعد' : 'Google Maps API key is not set',
           body: isAr
-            ? 'المتغير VITE_GOOGLE_MAPS_API_KEY غير موجود في بيئة التطبيق. أضفه في إعدادات بيئة منصة Lovable (يبدأ الاسم بـ VITE_)، وتأكد أن المفتاح مُفعّل عليه Maps JavaScript API وDirections API.'
-            : 'The VITE_GOOGLE_MAPS_API_KEY environment variable is missing. Add it in the Lovable environment settings (the name must start with VITE_), and make sure the key has Maps JavaScript API and Directions API enabled.',
+            ? 'المتغير VITE_GOOGLE_MAPS_API_KEY غير موجود في بيئة التطبيق. أضفه في إعدادات بيئة منصة Lovable (يبدأ الاسم بـ VITE_)، وتأكد أن المفتاح مُفعّل عليه Maps JavaScript API (حساب المسارات يتم عبر OSRM المجانية).'
+            : 'The VITE_GOOGLE_MAPS_API_KEY environment variable is missing. Add it in the Lovable environment settings (the name must start with VITE_), and make sure the key has Maps JavaScript API enabled (routing is handled by the free OSRM service).',
         }
       case 'maps-error':
         return {
@@ -341,8 +341,8 @@ export const RouteMap = forwardRef<
         return {
           title: isAr ? 'تعذر تحميل Google Maps' : 'Google Maps could not load',
           body: isAr
-            ? 'حدث خطأ غير متوقع أثناء تهيئة الخريطة. تحقق من تفعيل Maps JavaScript API وDirections API للمفتاح.'
-            : 'An unexpected error occurred while initializing the map. Check that Maps JavaScript API and Directions API are enabled for the key.',
+            ? 'حدث خطأ غير متوقع أثناء تهيئة الخريطة. تحقق من تفعيل Maps JavaScript API للمفتاح.'
+            : 'An unexpected error occurred while initializing the map. Check that Maps JavaScript API is enabled for the key.',
         }
       default:
         return null
@@ -351,11 +351,11 @@ export const RouteMap = forwardRef<
 
   const allRoutesFailed = loadState === 'ready' && routeTotal > 0 && routeFailures >= routeTotal
   const routesWarning = isAr
-    ? `تعذر تحميل ${routeFailures} من المسارات عبر Directions API.`
-    : `${routeFailures} routes could not be loaded from Directions API.`
+    ? `تعذر حساب ${routeFailures} من المسارات عبر خدمة OSRM.`
+    : `${routeFailures} routes could not be calculated by OSRM.`
   const directionsDisabledWarning = isAr
-    ? 'تعذر تحميل جميع المسارات. يبدو أن Directions API غير مُفعّل لهذا المفتاح — فعّله في Google Cloud Console.'
-    : 'All routes failed to load. Directions API appears not to be enabled for this key — enable it in Google Cloud Console.'
+    ? 'تعذر حساب المسار لجميع الجولات. خدمة OSRM المجانية غير متاحة حاليًا — أعد المحاولة لاحقًا.'
+    : 'Could not calculate any route. The free OSRM service is currently unavailable — please try again later.'
 
   return (
     <div className="relative h-full w-full" aria-label={isAr ? 'خريطة أسطول جدة' : 'Jeddah fleet map'}>
