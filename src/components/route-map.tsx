@@ -9,6 +9,7 @@ import {
 import { importLibrary, setOptions } from '@googlemaps/js-api-loader'
 import { LoaderCircle, MapPinned, TriangleAlert } from 'lucide-react'
 import { JEDDAH_CENTER, trucks, type Truck, type TruckStatus } from '@/lib/data'
+import { fetchOsrmRoute, type OsrmRoute } from '@/lib/osrm'
 import type { Lang } from '@/lib/i18n'
 
 export type RouteMapHandle = {
@@ -16,8 +17,11 @@ export type RouteMapHandle = {
   recenter: () => void
 }
 
-type RouteRecord = Record<string, google.maps.DirectionsResult>
-type RendererRecord = Record<string, google.maps.DirectionsRenderer>
+export type RouteMetrics = Record<string, { distance: number; duration: number }>
+
+type RouteRecord = Record<string, { bounds: google.maps.LatLngBounds; route: OsrmRoute }>
+type RendererRecord = Record<string, google.maps.Polyline>
+
 
 const statusColor: Record<TruckStatus, string> = {
   onTime: '#2e8b57',
@@ -112,8 +116,13 @@ function infoWindowHtml(truck: Truck, lang: Lang) {
 
 export const RouteMap = forwardRef<
   RouteMapHandle,
-  { selectedId: string | null; onSelect: (id: string) => void; lang: Lang }
->(function RouteMap({ selectedId, onSelect, lang }, ref) {
+  {
+    selectedId: string | null
+    onSelect: (id: string) => void
+    lang: Lang
+    onMetrics?: (metrics: RouteMetrics) => void
+  }
+>(function RouteMap({ selectedId, onSelect, lang, onMetrics }, ref) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<google.maps.Map | null>(null)
   const markersRef = useRef<Record<string, google.maps.Marker>>({})
@@ -129,6 +138,8 @@ export const RouteMap = forwardRef<
   const [routeTotal, setRouteTotal] = useState(0)
   const [routeVersion, setRouteVersion] = useState(0)
   selectRef.current = onSelect
+  const onMetricsRef = useRef(onMetrics)
+  onMetricsRef.current = onMetrics
 
   function showTruck(id: string) {
     const truck = trucks.find((item) => item.id === id)
@@ -136,7 +147,7 @@ export const RouteMap = forwardRef<
     const marker = markersRef.current[id]
     if (!truck || !map || !marker) return
 
-    const routeBounds = routesRef.current[id]?.routes[0]?.bounds
+    const routeBounds = routesRef.current[id]?.bounds
     if (routeBounds) map.fitBounds(routeBounds, 70)
     else {
       map.panTo({ lat: truck.lat, lng: truck.lng })
@@ -179,15 +190,9 @@ export const RouteMap = forwardRef<
         configureLoader(apiKey)
         let Map: typeof google.maps.Map
         let InfoWindow: typeof google.maps.InfoWindow
-        let DirectionsService: typeof google.maps.DirectionsService
-        let DirectionsRenderer: typeof google.maps.DirectionsRenderer
         try {
-          const [maps, routes] = await Promise.all([
-            importLibrary('maps'),
-            importLibrary('routes'),
-          ])
+          const maps = await importLibrary('maps')
           ;({ Map, InfoWindow } = maps as unknown as typeof google.maps)
-          ;({ DirectionsService, DirectionsRenderer } = routes as unknown as typeof google.maps)
         } catch {
           if (!cancelled) setLoadState('maps-error')
           return
@@ -223,46 +228,44 @@ export const RouteMap = forwardRef<
           bounds.extend(marker.getPosition()!)
         })
 
-        const directionsService = new DirectionsService()
+        // Routes come from the free OSRM service; Google Maps only renders them.
         let failures = 0
+        const metrics: RouteMetrics = {}
         await Promise.all(trucks.map(async (truck) => {
-          try {
-            const result = await directionsService.route({
-              origin: truck.route.origin,
-              destination: truck.route.destination,
-              waypoints: truck.route.waypoints.map((location) => ({ location, stopover: true })),
-              optimizeWaypoints: false,
-              travelMode: google.maps.TravelMode.DRIVING,
-              region: 'SA',
-            })
-            if (cancelled) return
-            routesRef.current[truck.id] = result
-            const renderer = new DirectionsRenderer({
-              map,
-              directions: result,
-              suppressMarkers: true,
-              preserveViewport: true,
-              polylineOptions: {
-                strokeColor: truck.identityColor,
-                strokeOpacity: 0.82,
-                strokeWeight: 5,
-              },
-            })
-            renderersRef.current[truck.id] = renderer
-            const routeBounds = result.routes[0]?.bounds
-            if (routeBounds) {
-              bounds.extend(routeBounds.getNorthEast())
-              bounds.extend(routeBounds.getSouthWest())
-            }
-          } catch {
+          const route = await fetchOsrmRoute([
+            truck.route.origin,
+            ...truck.route.waypoints,
+            truck.route.destination,
+          ])
+          if (cancelled) return
+          if (!route) {
             failures += 1
+            return
           }
+
+          const routeBounds = new google.maps.LatLngBounds()
+          route.path.forEach((point) => routeBounds.extend(point))
+          routesRef.current[truck.id] = { bounds: routeBounds, route }
+          metrics[truck.id] = { distance: route.distance, duration: route.duration }
+
+          const polyline = new google.maps.Polyline({
+            map,
+            path: route.path,
+            geodesic: false,
+            strokeColor: truck.identityColor,
+            strokeOpacity: 0.82,
+            strokeWeight: 5,
+          })
+          renderersRef.current[truck.id] = polyline
+          bounds.extend(routeBounds.getNorthEast())
+          bounds.extend(routeBounds.getSouthWest())
         }))
 
         if (cancelled) return
         setRouteTotal(trucks.length)
         setRouteFailures(failures)
         setRouteVersion((value) => value + 1)
+        onMetricsRef.current?.(metrics)
         map.fitBounds(bounds, 55)
         setLoadState('ready')
 
@@ -304,12 +307,10 @@ export const RouteMap = forwardRef<
         opacity: selectedId && !selected ? 0.58 : 1,
       })
       renderersRef.current[truck.id]?.setOptions({
-        polylineOptions: {
-          strokeColor: truck.identityColor,
-          strokeOpacity: selectedId ? (selected ? 1 : 0.1) : 0.82,
-          strokeWeight: selected ? 7 : selectedId ? 3 : 5,
-          zIndex: selected ? 100 : 1,
-        },
+        strokeColor: truck.identityColor,
+        strokeOpacity: selectedId ? (selected ? 1 : 0.1) : 0.82,
+        strokeWeight: selected ? 7 : selectedId ? 3 : 5,
+        zIndex: selected ? 100 : 1,
       })
     })
 
@@ -326,8 +327,8 @@ export const RouteMap = forwardRef<
         return {
           title: isAr ? 'مفتاح Google Maps غير مُعد' : 'Google Maps API key is not set',
           body: isAr
-            ? 'المتغير VITE_GOOGLE_MAPS_API_KEY غير موجود في بيئة التطبيق. أضفه في إعدادات بيئة منصة Lovable (يبدأ الاسم بـ VITE_)، وتأكد أن المفتاح مُفعّل عليه Maps JavaScript API وDirections API.'
-            : 'The VITE_GOOGLE_MAPS_API_KEY environment variable is missing. Add it in the Lovable environment settings (the name must start with VITE_), and make sure the key has Maps JavaScript API and Directions API enabled.',
+            ? 'المتغير VITE_GOOGLE_MAPS_API_KEY غير موجود في بيئة التطبيق. أضفه في إعدادات بيئة منصة Lovable (يبدأ الاسم بـ VITE_)، وتأكد أن المفتاح مُفعّل عليه Maps JavaScript API (حساب المسارات يتم عبر OSRM المجانية).'
+            : 'The VITE_GOOGLE_MAPS_API_KEY environment variable is missing. Add it in the Lovable environment settings (the name must start with VITE_), and make sure the key has Maps JavaScript API enabled (routing is handled by the free OSRM service).',
         }
       case 'maps-error':
         return {
@@ -340,8 +341,8 @@ export const RouteMap = forwardRef<
         return {
           title: isAr ? 'تعذر تحميل Google Maps' : 'Google Maps could not load',
           body: isAr
-            ? 'حدث خطأ غير متوقع أثناء تهيئة الخريطة. تحقق من تفعيل Maps JavaScript API وDirections API للمفتاح.'
-            : 'An unexpected error occurred while initializing the map. Check that Maps JavaScript API and Directions API are enabled for the key.',
+            ? 'حدث خطأ غير متوقع أثناء تهيئة الخريطة. تحقق من تفعيل Maps JavaScript API للمفتاح.'
+            : 'An unexpected error occurred while initializing the map. Check that Maps JavaScript API is enabled for the key.',
         }
       default:
         return null
@@ -350,11 +351,11 @@ export const RouteMap = forwardRef<
 
   const allRoutesFailed = loadState === 'ready' && routeTotal > 0 && routeFailures >= routeTotal
   const routesWarning = isAr
-    ? `تعذر تحميل ${routeFailures} من المسارات عبر Directions API.`
-    : `${routeFailures} routes could not be loaded from Directions API.`
+    ? `تعذر حساب ${routeFailures} من المسارات عبر خدمة OSRM.`
+    : `${routeFailures} routes could not be calculated by OSRM.`
   const directionsDisabledWarning = isAr
-    ? 'تعذر تحميل جميع المسارات. يبدو أن Directions API غير مُفعّل لهذا المفتاح — فعّله في Google Cloud Console.'
-    : 'All routes failed to load. Directions API appears not to be enabled for this key — enable it in Google Cloud Console.'
+    ? 'تعذر حساب المسار لجميع الجولات. خدمة OSRM المجانية غير متاحة حاليًا — أعد المحاولة لاحقًا.'
+    : 'Could not calculate any route. The free OSRM service is currently unavailable — please try again later.'
 
   return (
     <div className="relative h-full w-full" aria-label={isAr ? 'خريطة أسطول جدة' : 'Jeddah fleet map'}>

@@ -1,25 +1,29 @@
 
-import { useRef, useState } from 'react'
-import { Crosshair, MapPin, User } from 'lucide-react'
+import { useCallback, useRef, useState } from 'react'
+import { Clock, Crosshair, MapPin, Route as RouteIcon, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/components/app-providers'
 import { PageHeader } from '@/components/page-header'
 import { Panel } from '@/components/panel'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
-import { RouteMap, type RouteMapHandle } from '@/components/route-map'
+import { RouteMap, type RouteMapHandle, type RouteMetrics } from '@/components/route-map'
 import { OrderDetails } from '@/components/order-details'
 import { trucks } from '@/lib/data'
+import { formatDistance, formatDuration } from '@/lib/osrm'
 
 export function RouteReview() {
   const { t, lang } = useApp()
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [metrics, setMetrics] = useState<RouteMetrics | null>(null)
   const mapRef = useRef<RouteMapHandle>(null)
+  const handleMetrics = useCallback((next: RouteMetrics) => setMetrics(next), [])
 
   function handleSelect(id: string) {
     setSelectedId(id)
     mapRef.current?.flyTo(id)
   }
+
 
   return (
     <div className="mx-auto flex h-full max-w-[1400px] flex-col gap-5 p-4 md:p-6">
@@ -55,6 +59,7 @@ export function RouteReview() {
             {trucks.map((truck) => {
               const active = truck.id === selectedId
               const progress = Math.round((truck.completed / truck.stops) * 100)
+              const metric = metrics?.[truck.id]
               return (
                 <li key={truck.id}>
                   <button
@@ -96,6 +101,21 @@ export function RouteReview() {
                         {truck.completed}/{truck.stops} {t('rr.stops')}
                       </span>
                     </div>
+                    <div className="mt-2.5 flex items-center gap-3 text-[11px] font-semibold text-muted-foreground tabular-nums">
+                      <span className="flex items-center gap-1">
+                        <RouteIcon className="size-3.5 text-primary" />
+                        {metric ? formatDistance(metric.distance, lang) : '—'}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="size-3.5 text-primary" />
+                        {metric ? formatDuration(metric.duration, lang) : '—'}
+                      </span>
+                      {metrics && !metric && (
+                        <span className="text-destructive">
+                          {lang === 'ar' ? 'تعذر حساب المسار' : 'Route unavailable'}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 </li>
               )
@@ -110,7 +130,9 @@ export function RouteReview() {
             selectedId={selectedId}
             onSelect={handleSelect}
             lang={lang}
+            onMetrics={handleMetrics}
           />
+
           {!selectedId && (
             <div className="pointer-events-none absolute bottom-4 z-[500] rounded-full border border-border bg-card/95 px-4 py-2 text-xs font-medium text-muted-foreground shadow-lg backdrop-blur ltr:left-4 rtl:right-4">
               {t('rr.selectHint')}
