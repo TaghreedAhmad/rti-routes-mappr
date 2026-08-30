@@ -59,6 +59,7 @@ export function RouteReview() {
             {trucks.map((truck) => {
               const active = truck.id === selectedId
               const progress = Math.round((truck.completed / truck.stops) * 100)
+              const metric = metrics[truck.id]
               return (
                 <li key={truck.id}>
                   <button
@@ -100,6 +101,21 @@ export function RouteReview() {
                         {truck.completed}/{truck.stops} {t('rr.stops')}
                       </span>
                     </div>
+                    <div className="mt-2.5 flex items-center gap-3 text-[11px] font-semibold text-muted-foreground tabular-nums">
+                      <span className="flex items-center gap-1">
+                        <RouteIcon className="size-3.5 text-primary" />
+                        {metric ? formatDistance(metric.distance, lang) : '—'}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="size-3.5 text-primary" />
+                        {metric ? formatDuration(metric.duration, lang) : '—'}
+                      </span>
+                      {!metric && (
+                        <span className="text-destructive">
+                          {lang === 'ar' ? 'تعذر حساب المسار' : 'Route unavailable'}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 </li>
               )
@@ -114,7 +130,9 @@ export function RouteReview() {
             selectedId={selectedId}
             onSelect={handleSelect}
             lang={lang}
+            onMetrics={handleMetrics}
           />
+
           {!selectedId && (
             <div className="pointer-events-none absolute bottom-4 z-[500] rounded-full border border-border bg-card/95 px-4 py-2 text-xs font-medium text-muted-foreground shadow-lg backdrop-blur ltr:left-4 rtl:right-4">
               {t('rr.selectHint')}
