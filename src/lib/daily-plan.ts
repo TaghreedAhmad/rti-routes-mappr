@@ -80,9 +80,11 @@ function pick(row: Record<string, unknown>, candidates: string[]) {
 export function parseCsv(text: string): Array<Record<string, unknown>> {
   const clean = text.replace(/^\uFEFF/, '').trim()
   if (!clean) return []
-  const delimiter = (clean.split('\n')[0].match(/;/g)?.length ?? 0) > (clean.split('\n')[0].match(/,/g)?.length ?? 0) ? ';' : ','
   const lines = clean.split(/\r?\n/).filter((l) => l.trim() !== '')
-  const header = splitCsvLine(lines[0], delimiter)
+  const firstLine = lines[0] ?? ''
+  const delimiter =
+    (firstLine.match(/;/g)?.length ?? 0) > (firstLine.match(/,/g)?.length ?? 0) ? ';' : ','
+  const header = splitCsvLine(firstLine, delimiter)
   return lines.slice(1).map((line) => {
     const cells = splitCsvLine(line, delimiter)
     const row: Record<string, unknown> = {}
