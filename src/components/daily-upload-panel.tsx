@@ -239,17 +239,17 @@ export function DailyUploadPanel() {
                 {!emailState.configured && (
                   <div className="font-normal">
                     {ar
-                      ? 'لتفعيل الإرسال الفعلي يلزم إعداد نطاق البريد الخاص بالشركة أولًا.'
-                      : 'Actual delivery requires configuring your company sender domain first.'}
+                      ? 'لتفعيل الإرسال الفعلي يلزم إعداد مفتاح البريد أولًا.'
+                      : 'Actual delivery requires configuring the email API key first.'}
                   </div>
                 )}
                 {emailState.results
-                  .filter((result) => !result.sent && result.reason === 'invalid_email')
+                  .filter((result) => result.reason === 'send_failed')
                   .map((result) => (
                     <div key={result.truckId} className="font-normal">
                       {ar
-                        ? `${result.truckId}: بريد السائق غير مسجل أو غير صحيح`
-                        : `${result.truckId}: driver email missing or invalid`}
+                        ? `${result.truckId}: تعذر إرسال البريد`
+                        : `${result.truckId}: email could not be sent`}
                     </div>
                   ))}
               </div>
