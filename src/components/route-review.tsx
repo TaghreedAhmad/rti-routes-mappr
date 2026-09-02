@@ -1,6 +1,6 @@
 
 import { useCallback, useRef, useState } from 'react'
-import { Clock, Crosshair, MapPin, Route as RouteIcon, User } from 'lucide-react'
+import { Building2, Clock, Crosshair, MapPin, Route as RouteIcon, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/components/app-providers'
 import { PageHeader } from '@/components/page-header'
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { RouteMap, type RouteMapHandle, type RouteMetrics } from '@/components/route-map'
 import { OrderDetails } from '@/components/order-details'
 import { trucks } from '@/lib/data'
+import { thirdPartyTrucks, useAllocation } from '@/lib/allocation'
 import { formatDistance, formatDuration } from '@/lib/osrm'
 
 export function RouteReview() {
