@@ -119,7 +119,8 @@ export async function readSpreadsheet(file: File): Promise<Array<Record<string, 
   if (/\.csv$/i.test(file.name)) return parseCsv(await file.text())
   const XLSX = await import('xlsx')
   const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array' })
-  const sheet = workbook.Sheets[workbook.SheetNames[0]]
+  const sheetName = workbook.SheetNames[0]
+  const sheet = sheetName ? workbook.Sheets[sheetName] : undefined
   if (!sheet) return []
   return XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' })
 }
@@ -242,6 +243,7 @@ export function planRoutes(stops: PlanStop[]) {
       })
       if (bestIndex === -1) break
       const [stop] = pending.splice(bestIndex, 1)
+      if (!stop) break
       route.stops.push(stop)
       route.totalBoxes += stop.totalBoxes
       if (stop.point) cursor = stop.point
