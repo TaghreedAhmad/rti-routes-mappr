@@ -32,8 +32,16 @@ export type PlanRoute = {
   driver: { ar: string; en: string }
   identityColor: string
   capacity: number
+  /** Trips allowed per day for this truck. */
+  maxTripsPerDay: number
+  /** Trips actually needed for the assigned load. */
+  trips: number
   stops: PlanStop[]
   totalBoxes: number
+  /** Round-trip distance depot → stops → depot (km). */
+  distanceKm: number
+  /** Geographic spread of the assigned stops (km², bounding box). */
+  areaKm2: number
 }
 
 export type DailyPlan = {
@@ -47,7 +55,14 @@ export type DailyPlan = {
   totalBoxes: number
   trucksUsed: number
   thirdPartyActivated: number
+  /** Sum of all route distances (km). */
+  totalDistanceKm: number
+  /** Theoretical lower bound (minimum spanning tree over depot + stops, km). */
+  idealDistanceKm: number
+  /** ideal / actual as a percentage — "كفاءة توزيع المسافات". */
+  distanceEfficiency: number
 }
+
 
 /* ------------------------------------------------------------------ *
  * Parsing (Excel / CSV)
