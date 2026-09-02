@@ -195,7 +195,7 @@ export function buildStops(rows: Array<Record<string, unknown>>) {
 }
 
 /* ------------------------------------------------------------------ *
- * VRP: capacity-aware nearest-neighbour assignment
+ * VRP: geography + trips + distance aware assignment
  * ------------------------------------------------------------------ */
 
 function distance(a: RoutePoint, b: RoutePoint) {
@@ -204,6 +204,10 @@ function distance(a: RoutePoint, b: RoutePoint) {
   return Math.sqrt(dLat * dLat + dLng * dLng) * 111
 }
 
+/** Trips a truck is allowed to run per working day. */
+export const OWN_MAX_TRIPS_PER_DAY = 2
+export const THIRD_PARTY_MAX_TRIPS_PER_DAY = 1
+
 type Vehicle = {
   truckId: string
   provider: 'own' | 'thirdParty'
@@ -211,6 +215,7 @@ type Vehicle = {
   driver: { ar: string; en: string }
   identityColor: string
   capacity: number
+  maxTripsPerDay: number
 }
 
 function vehicles(): Vehicle[] {
@@ -222,6 +227,7 @@ function vehicles(): Vehicle[] {
       driver: truck.driver,
       identityColor: truck.identityColor,
       capacity: OWN_TRUCK_CAPACITY,
+      maxTripsPerDay: OWN_MAX_TRIPS_PER_DAY,
     })),
     ...thirdPartyTrucks.map((truck) => ({
       truckId: truck.id,
@@ -230,27 +236,129 @@ function vehicles(): Vehicle[] {
       driver: { ar: 'مقدم خدمة متعاقد', en: 'Contracted provider' },
       identityColor: truck.identityColor,
       capacity: truck.capacity,
+      maxTripsPerDay: THIRD_PARTY_MAX_TRIPS_PER_DAY,
     })),
   ]
 }
 
+/** Daily allowance = capacity × allowed trips. */
+function dailyAllowance(v: Vehicle) {
+  return v.capacity * v.maxTripsPerDay
+}
+
+function centroid(points: RoutePoint[]): RoutePoint {
+  if (points.length === 0) return DEPOT
+  const lat = points.reduce((s, p) => s + p.lat, 0) / points.length
+  const lng = points.reduce((s, p) => s + p.lng, 0) / points.length
+  return { lat, lng }
+}
+
+function boundingArea(points: RoutePoint[]) {
+  if (points.length < 2) return 0
+  const lats = points.map((p) => p.lat)
+  const lngs = points.map((p) => p.lng)
+  const minLat = Math.min(...lats)
+  const maxLat = Math.max(...lats)
+  const minLng = Math.min(...lngs)
+  const maxLng = Math.max(...lngs)
+  const height = (maxLat - minLat) * 111
+  const width =
+    (maxLng - minLng) * 111 * Math.cos((((minLat + maxLat) / 2) * Math.PI) / 180)
+  return Math.round(height * width * 10) / 10
+}
+
+/** Round-trip distance depot → stops (in order) → depot, km. */
+export function routeDistanceKm(stops: PlanStop[]) {
+  const points = stops.map((s) => s.point).filter((p): p is RoutePoint => Boolean(p))
+  if (points.length === 0) return 0
+  let total = 0
+  let cursor: RoutePoint = DEPOT
+  for (const point of points) {
+    total += distance(cursor, point)
+    cursor = point
+  }
+  total += distance(cursor, DEPOT)
+  return Math.round(total * 10) / 10
+}
+
+/** Minimum spanning tree over depot + all stops — theoretical distance floor. */
+function idealDistance(stops: PlanStop[]) {
+  const points = [DEPOT, ...stops.map((s) => s.point).filter((p): p is RoutePoint => Boolean(p))]
+  if (points.length < 2) return 0
+  const visited = new Set<number>([0])
+  let total = 0
+  while (visited.size < points.length) {
+    let best = Infinity
+    let bestIndex = -1
+    points.forEach((point, index) => {
+      if (visited.has(index)) return
+      for (const seen of visited) {
+        const from = points[seen]
+        if (!from) continue
+        const d = distance(from, point)
+        if (d < best) {
+          best = d
+          bestIndex = index
+        }
+      }
+    })
+    if (bestIndex === -1) break
+    visited.add(bestIndex)
+    total += best
+  }
+  return Math.round(total * 10) / 10
+}
+
 export function planRoutes(stops: PlanStop[]) {
   const fleet = vehicles()
-  const routes: PlanRoute[] = fleet.map((v) => ({ ...v, stops: [], totalBoxes: 0 }))
-  const pending = [...stops].sort((a, b) => b.totalBoxes - a.totalBoxes)
+  const routes: PlanRoute[] = fleet.map((v) => ({
+    ...v,
+    stops: [],
+    totalBoxes: 0,
+    trips: 0,
+    distanceKm: 0,
+    areaKm2: 0,
+  }))
+  // Farthest-first seeding keeps distant clusters together instead of
+  // greedily filling the first truck with whatever is heaviest.
+  const pending = [...stops].sort((a, b) => {
+    const da = a.point ? distance(DEPOT, a.point) : 0
+    const db = b.point ? distance(DEPOT, b.point) : 0
+    if (db !== da) return db - da
+    return b.totalBoxes - a.totalBoxes
+  })
   const unassignedStops: PlanStop[] = []
 
   for (const route of routes) {
     if (pending.length === 0) break
+    const allowance = dailyAllowance(route as unknown as Vehicle)
     let cursor: RoutePoint = DEPOT
+    const assignedPoints: RoutePoint[] = []
+
+    // Seed with the farthest remaining stop that fits — anchors the cluster.
+    const seedIndex = pending.findIndex((stop) => stop.totalBoxes <= allowance)
+    if (seedIndex === -1) continue
+    const [seed] = pending.splice(seedIndex, 1)
+    if (!seed) continue
+    route.stops.push(seed)
+    route.totalBoxes += seed.totalBoxes
+    if (seed.point) {
+      cursor = seed.point
+      assignedPoints.push(seed.point)
+    }
+
     let guard = pending.length + 1
     while (guard-- > 0) {
-      // Nearest stop that still fits the remaining capacity.
+      const anchor = centroid(assignedPoints)
       let bestIndex = -1
       let bestScore = Infinity
       pending.forEach((stop, index) => {
-        if (route.totalBoxes + stop.totalBoxes > route.capacity) return
-        const score = stop.point ? distance(cursor, stop.point) : index
+        if (route.totalBoxes + stop.totalBoxes > allowance) return
+        // Cost = travel from the current position + how much the stop
+        // stretches the truck's geographic area (compactness penalty).
+        const score = stop.point
+          ? distance(cursor, stop.point) + 0.4 * distance(anchor, stop.point)
+          : 1000 + index
         if (score < bestScore) {
           bestScore = score
           bestIndex = index
@@ -261,19 +369,60 @@ export function planRoutes(stops: PlanStop[]) {
       if (!stop) break
       route.stops.push(stop)
       route.totalBoxes += stop.totalBoxes
-      if (stop.point) cursor = stop.point
+      if (stop.point) {
+        cursor = stop.point
+        assignedPoints.push(stop.point)
+      }
     }
+
+    // Order the cluster with a nearest-neighbour sweep from the depot,
+    // so the driving sequence itself is short.
+    const ordered: PlanStop[] = []
+    const remaining = [...route.stops]
+    let seq: RoutePoint = DEPOT
+    while (remaining.length > 0) {
+      let best = 0
+      let bestScore = Infinity
+      remaining.forEach((stop, index) => {
+        const score = stop.point ? distance(seq, stop.point) : Infinity - index
+        if (score < bestScore) {
+          bestScore = score
+          best = index
+        }
+      })
+      const [next] = remaining.splice(best, 1)
+      if (!next) break
+      ordered.push(next)
+      if (next.point) seq = next.point
+    }
+    route.stops = ordered
+    route.trips = Math.min(
+      route.maxTripsPerDay,
+      Math.max(1, Math.ceil(route.totalBoxes / route.capacity)),
+    )
+    route.distanceKm = routeDistanceKm(route.stops)
+    route.areaKm2 = boundingArea(assignedPoints)
   }
 
   // Anything still pending exceeds the whole fleet (own + third party).
   unassignedStops.push(...pending)
 
   const used = routes.filter((r) => r.stops.length > 0)
+  const totalDistanceKm = Math.round(used.reduce((s, r) => s + r.distanceKm, 0) * 10) / 10
+  const idealDistanceKm = idealDistance(stops)
+  const distanceEfficiency =
+    totalDistanceKm > 0 && idealDistanceKm > 0
+      ? Math.min(100, Math.round((idealDistanceKm / totalDistanceKm) * 100))
+      : 0
+
   return {
     routes,
     unassignedStops,
     trucksUsed: used.length,
     thirdPartyActivated: used.filter((r) => r.provider === 'thirdParty').length,
+    totalDistanceKm,
+    idealDistanceKm,
+    distanceEfficiency,
   }
 }
 
@@ -282,7 +431,15 @@ export function buildDailyPlan(
   rows: Array<Record<string, unknown>>,
 ): DailyPlan {
   const { stops, rowErrors } = buildStops(rows)
-  const { routes, unassignedStops, trucksUsed, thirdPartyActivated } = planRoutes(stops)
+  const {
+    routes,
+    unassignedStops,
+    trucksUsed,
+    thirdPartyActivated,
+    totalDistanceKm,
+    idealDistanceKm,
+    distanceEfficiency,
+  } = planRoutes(stops)
   const totalBoxes = stops.reduce((sum, s) => sum + s.totalBoxes, 0)
 
   return {
@@ -296,8 +453,12 @@ export function buildDailyPlan(
     totalBoxes,
     trucksUsed,
     thirdPartyActivated,
+    totalDistanceKm,
+    idealDistanceKm,
+    distanceEfficiency,
   }
 }
+
 
 /* ------------------------------------------------------------------ *
  * Shared store
