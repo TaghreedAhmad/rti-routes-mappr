@@ -17,6 +17,7 @@ import { useApp } from '@/components/app-providers'
 import { PageHeader } from '@/components/page-header'
 import { Panel } from '@/components/panel'
 import { StatusBadge } from '@/components/status-badge'
+import { ThirdPartyPanel } from '@/components/third-party-panel'
 import { dailyOrders, fleetDistribution, performanceSeries, trucks } from '@/lib/data'
 
 const CHART = {
