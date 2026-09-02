@@ -33,6 +33,9 @@ export function FleetTable() {
                 <th className="px-4 py-3 font-semibold text-start">{ar ? 'السائق' : 'Driver'}</th>
                 <th className="px-4 py-3 font-semibold text-start">{ar ? 'المسار' : 'Route'}</th>
                 <th className="px-4 py-3 font-semibold text-start">{ar ? 'الحالة' : 'Status'}</th>
+                <th className="px-4 py-3 font-semibold text-start">
+                  {ar ? 'التبعية' : 'Fleet'}
+                </th>
                 <th className="px-4 py-3 font-semibold text-start">{ar ? 'التوقفات' : 'Stops'}</th>
                 <th className="px-4 py-3 font-semibold text-start">{ar ? 'السرعة' : 'Speed'}</th>
                 <th className="px-4 py-3 font-semibold text-start">{ar ? 'الحمولة' : 'Load'}</th>
