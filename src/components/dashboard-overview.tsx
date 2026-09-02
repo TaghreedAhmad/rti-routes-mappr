@@ -12,14 +12,19 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { AlertTriangle, Clock, Package, Truck } from 'lucide-react'
+import { AlertTriangle, Clock, Gauge, Package, Truck } from 'lucide-react'
 import { useApp } from '@/components/app-providers'
 import { PageHeader } from '@/components/page-header'
 import { Panel } from '@/components/panel'
 import { StatusBadge } from '@/components/status-badge'
 import { ThirdPartyPanel } from '@/components/third-party-panel'
+import { EmergencyPanel } from '@/components/emergency-panel'
+import { TrafficAlertsPanel } from '@/components/traffic-alerts-panel'
+import { AiInsightsPanel } from '@/components/ai-insights-panel'
 import { DailyUploadPanel } from '@/components/daily-upload-panel'
+import { useDailyPlan } from '@/lib/daily-plan'
 import { dailyOrders, fleetDistribution, performanceSeries, trucks } from '@/lib/data'
+
 
 const CHART = {
   primary: '#2E8B57',
@@ -74,6 +79,7 @@ function Kpi({
 export function DashboardOverview() {
   const { lang } = useApp()
   const ar = lang === 'ar'
+  const plan = useDailyPlan()
 
   const delayed = trucks.filter((t) => t.status === 'delayed').length
   const exceptions = trucks.filter((t) => t.status === 'exception').length
@@ -94,7 +100,7 @@ export function DashboardOverview() {
 
       <DailyUploadPanel />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <Kpi
           icon={Truck}
           label={ar ? 'الشاحنات النشطة' : 'Active trucks'}
@@ -115,6 +121,20 @@ export function DashboardOverview() {
           tone="warning"
         />
         <Kpi
+          icon={Gauge}
+          label={ar ? 'كفاءة توزيع المسافات' : 'Distance allocation efficiency'}
+          value={plan ? `${plan.distanceEfficiency}%` : '—'}
+          hint={
+            plan
+              ? ar
+                ? `${plan.totalDistanceKm} كم فعلي مقابل ${plan.idealDistanceKm} كم مثالي`
+                : `${plan.totalDistanceKm} km actual vs ${plan.idealDistanceKm} km ideal`
+              : ar
+                ? 'ارفع ملف اليوم لحساب المؤشر'
+                : 'Upload today’s file to compute it'
+          }
+        />
+        <Kpi
           icon={AlertTriangle}
           label={ar ? 'الاستثناءات' : 'Exceptions'}
           value={String(exceptions)}
@@ -123,7 +143,14 @@ export function DashboardOverview() {
         />
       </div>
 
+      <TrafficAlertsPanel />
+
+      <AiInsightsPanel />
+
+      <EmergencyPanel />
+
       <ThirdPartyPanel />
+
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <Panel className="p-5 lg:col-span-2">
