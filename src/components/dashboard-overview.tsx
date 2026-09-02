@@ -12,14 +12,19 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { AlertTriangle, Clock, Package, Truck } from 'lucide-react'
+import { AlertTriangle, Clock, Gauge, Package, Truck } from 'lucide-react'
 import { useApp } from '@/components/app-providers'
 import { PageHeader } from '@/components/page-header'
 import { Panel } from '@/components/panel'
 import { StatusBadge } from '@/components/status-badge'
 import { ThirdPartyPanel } from '@/components/third-party-panel'
+import { EmergencyPanel } from '@/components/emergency-panel'
+import { TrafficAlertsPanel } from '@/components/traffic-alerts-panel'
+import { AiInsightsPanel } from '@/components/ai-insights-panel'
 import { DailyUploadPanel } from '@/components/daily-upload-panel'
+import { useDailyPlan } from '@/lib/daily-plan'
 import { dailyOrders, fleetDistribution, performanceSeries, trucks } from '@/lib/data'
+
 
 const CHART = {
   primary: '#2E8B57',
