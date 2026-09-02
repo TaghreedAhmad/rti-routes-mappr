@@ -9,6 +9,9 @@ import { thirdPartyTrucks, useAllocation } from '@/lib/allocation'
 export function FleetTable() {
   const { lang } = useApp()
   const ar = lang === 'ar'
+  const allocation = useAllocation()
+  const byTruck = new Map(allocation.assignments.map((a) => [a.truckId, a]))
+
 
   return (
     <div className="mx-auto flex max-w-[1400px] flex-col gap-5 p-4 md:p-6">
