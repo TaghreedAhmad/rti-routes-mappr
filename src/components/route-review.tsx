@@ -1,6 +1,6 @@
 
 import { useCallback, useRef, useState } from 'react'
-import { Clock, Crosshair, MapPin, Route as RouteIcon, User } from 'lucide-react'
+import { Building2, Clock, Crosshair, MapPin, Route as RouteIcon, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useApp } from '@/components/app-providers'
 import { PageHeader } from '@/components/page-header'
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { RouteMap, type RouteMapHandle, type RouteMetrics } from '@/components/route-map'
 import { OrderDetails } from '@/components/order-details'
 import { trucks } from '@/lib/data'
+import { thirdPartyTrucks, useAllocation } from '@/lib/allocation'
 import { formatDistance, formatDuration } from '@/lib/osrm'
 
 export function RouteReview() {
@@ -18,6 +19,10 @@ export function RouteReview() {
   const [metrics, setMetrics] = useState<RouteMetrics | null>(null)
   const mapRef = useRef<RouteMapHandle>(null)
   const handleMetrics = useCallback((next: RouteMetrics) => setMetrics(next), [])
+  const allocation = useAllocation()
+  const activeThirdParty = allocation.assignments.filter(
+    (a) => a.provider === 'thirdParty' && a.active,
+  )
 
   function handleSelect(id: string) {
     setSelectedId(id)
@@ -117,6 +122,42 @@ export function RouteReview() {
                       )}
                     </div>
                   </button>
+                </li>
+              )
+            })}
+
+            {activeThirdParty.map((assignment) => {
+              const meta = thirdPartyTrucks.find((t) => t.id === assignment.truckId)
+              return (
+                <li key={assignment.truckId}>
+                  <div
+                    className="rounded-xl border border-dashed p-3.5"
+                    style={{ borderColor: meta?.identityColor ?? '#9333ea' }}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-2 text-sm font-bold text-foreground">
+                        <Building2
+                          className="size-3.5"
+                          style={{ color: meta?.identityColor ?? '#9333ea' }}
+                        />
+                        {meta?.name[lang] ?? assignment.truckId}
+                      </span>
+                      <span
+                        className="rounded-full px-2.5 py-1 text-[11px] font-bold"
+                        style={{
+                          background: `${meta?.identityColor ?? '#9333ea'}1a`,
+                          color: meta?.identityColor ?? '#9333ea',
+                        }}
+                      >
+                        {lang === 'ar' ? 'طرف ثالث — مفعّلة' : 'Third party — active'}
+                      </span>
+                    </div>
+                    <div className="mt-2 text-xs text-muted-foreground tabular-nums">
+                      {lang === 'ar' ? 'مسار الفائض' : 'Overflow route'} ·{' '}
+                      {assignment.assigned}/{assignment.capacity}{' '}
+                      {lang === 'ar' ? 'وحدة' : 'units'}
+                    </div>
+                  </div>
                 </li>
               )
             })}

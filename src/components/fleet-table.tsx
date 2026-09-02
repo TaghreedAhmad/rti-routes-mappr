@@ -1,13 +1,17 @@
-import { Fuel, Gauge, Package } from 'lucide-react'
+import { Building2, Fuel, Gauge, Package } from 'lucide-react'
 import { useApp } from '@/components/app-providers'
 import { PageHeader } from '@/components/page-header'
 import { Panel } from '@/components/panel'
 import { StatusBadge } from '@/components/status-badge'
 import { trucks } from '@/lib/data'
+import { thirdPartyTrucks, useAllocation } from '@/lib/allocation'
 
 export function FleetTable() {
   const { lang } = useApp()
   const ar = lang === 'ar'
+  const allocation = useAllocation()
+  const byTruck = new Map(allocation.assignments.map((a) => [a.truckId, a]))
+
 
   return (
     <div className="mx-auto flex max-w-[1400px] flex-col gap-5 p-4 md:p-6">
@@ -29,6 +33,9 @@ export function FleetTable() {
                 <th className="px-4 py-3 font-semibold text-start">{ar ? 'السائق' : 'Driver'}</th>
                 <th className="px-4 py-3 font-semibold text-start">{ar ? 'المسار' : 'Route'}</th>
                 <th className="px-4 py-3 font-semibold text-start">{ar ? 'الحالة' : 'Status'}</th>
+                <th className="px-4 py-3 font-semibold text-start">
+                  {ar ? 'التبعية' : 'Fleet'}
+                </th>
                 <th className="px-4 py-3 font-semibold text-start">{ar ? 'التوقفات' : 'Stops'}</th>
                 <th className="px-4 py-3 font-semibold text-start">{ar ? 'السرعة' : 'Speed'}</th>
                 <th className="px-4 py-3 font-semibold text-start">{ar ? 'الحمولة' : 'Load'}</th>
@@ -60,6 +67,14 @@ export function FleetTable() {
                       }
                     />
                   </td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">
+                      {ar ? 'أسطولنا' : 'Own fleet'}
+                      <span className="tabular-nums opacity-70">
+                        {byTruck.get(truck.id)?.utilization ?? 0}%
+                      </span>
+                    </span>
+                  </td>
                   <td className="px-4 py-3 tabular-nums text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
                       <Package className="size-3.5" />
@@ -84,6 +99,71 @@ export function FleetTable() {
                   </td>
                 </tr>
               ))}
+
+              {thirdPartyTrucks.map((truck) => {
+                const assignment = byTruck.get(truck.id)
+                const active = assignment?.active ?? false
+                return (
+                  <tr
+                    key={truck.id}
+                    className={`border-t border-border hover:bg-muted/40 ${active ? '' : 'opacity-60'}`}
+                  >
+                    <td className="px-4 py-3 font-bold text-foreground">
+                      <span className="flex items-center gap-2">
+                        <Building2 className="size-3.5 shrink-0" style={{ color: truck.identityColor }} />
+                        {truck.name[lang]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {ar ? 'مقدم خدمة متعاقد' : 'Contracted provider'}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {active
+                        ? ar
+                          ? 'مسار الفائض'
+                          : 'Overflow route'
+                        : '—'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={
+                          active
+                            ? 'inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-2.5 py-1 text-[11px] font-bold text-warning'
+                            : 'inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold text-muted-foreground'
+                        }
+                      >
+                        {active ? (ar ? 'مفعّلة' : 'Activated') : ar ? 'غير مستخدمة' : 'Unused'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold"
+                        style={{
+                          background: `${truck.identityColor}1a`,
+                          color: truck.identityColor,
+                        }}
+                      >
+                        {ar ? 'طرف ثالث' : 'Third party'}
+                        <span className="tabular-nums opacity-70">
+                          {assignment?.utilization ?? 0}%
+                        </span>
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 tabular-nums text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Package className="size-3.5" />
+                        {assignment?.assigned ?? 0}/{truck.capacity}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">—</td>
+                    <td className="px-4 py-3 tabular-nums text-muted-foreground">
+                      {assignment?.utilization ?? 0}%
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">—</td>
+                    <td className="px-4 py-3 text-muted-foreground">—</td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

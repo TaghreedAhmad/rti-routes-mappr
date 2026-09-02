@@ -17,6 +17,7 @@ import { useApp } from '@/components/app-providers'
 import { PageHeader } from '@/components/page-header'
 import { Panel } from '@/components/panel'
 import { StatusBadge } from '@/components/status-badge'
+import { ThirdPartyPanel } from '@/components/third-party-panel'
 import { dailyOrders, fleetDistribution, performanceSeries, trucks } from '@/lib/data'
 
 const CHART = {
@@ -118,6 +119,8 @@ export function DashboardOverview() {
           tone="destructive"
         />
       </div>
+
+      <ThirdPartyPanel />
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <Panel className="p-5 lg:col-span-2">
