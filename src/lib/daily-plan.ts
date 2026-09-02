@@ -507,3 +507,30 @@ export function planAggregatedOrders(current: DailyPlan): AggregatedOrder[] {
     })),
   ) as AggregatedOrder[]
 }
+
+/** Recomputes the assignment from the current plan's stops (manual "إعادة الحساب"). */
+export function replanDailyPlan(): DailyPlan | null {
+  if (!plan) return null
+  const {
+    routes,
+    unassignedStops,
+    trucksUsed,
+    thirdPartyActivated,
+    totalDistanceKm,
+    idealDistanceKm,
+    distanceEfficiency,
+  } = planRoutes(plan.stops)
+  const next: DailyPlan = {
+    ...plan,
+    createdAt: Date.now(),
+    routes,
+    unassignedStops,
+    trucksUsed,
+    thirdPartyActivated,
+    totalDistanceKm,
+    idealDistanceKm,
+    distanceEfficiency,
+  }
+  setDailyPlan(next)
+  return next
+}
