@@ -68,7 +68,13 @@ export function TrafficAlertsPanel() {
           }
           inputs.push({ id: def.id, points: def.points, baselineSeconds: baseline })
         }
-        const result = await fetchTrafficSnapshot({ data: { routes: inputs } })
+        // Primary: Maps JavaScript API in the browser (authorised key).
+        let result = await fetchTrafficDurations(inputs)
+        // Fallback: server-side Routes API when a server key is configured.
+        if (!result.available) {
+          const server = await fetchTrafficSnapshot({ data: { routes: inputs } })
+          if (server.available) result = server
+        }
         setSnapshot(result)
       } catch {
         setSnapshot({
@@ -83,6 +89,7 @@ export function TrafficAlertsPanel() {
     },
     [],
   )
+
 
   useEffect(() => {
     const defs = routeDefs
