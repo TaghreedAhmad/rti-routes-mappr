@@ -19,6 +19,10 @@ export function RouteReview() {
   const [metrics, setMetrics] = useState<RouteMetrics | null>(null)
   const mapRef = useRef<RouteMapHandle>(null)
   const handleMetrics = useCallback((next: RouteMetrics) => setMetrics(next), [])
+  const allocation = useAllocation()
+  const activeThirdParty = allocation.assignments.filter(
+    (a) => a.provider === 'thirdParty' && a.active,
+  )
 
   function handleSelect(id: string) {
     setSelectedId(id)
