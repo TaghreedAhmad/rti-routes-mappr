@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { DEPOT, trucks, type RoutePoint } from '@/lib/data'
 import { replanDailyPlan, useDailyPlan } from '@/lib/daily-plan'
 import { fetchOsrmRoute } from '@/lib/osrm'
+import { fetchTrafficDurations } from '@/lib/traffic'
+
 import {
   fetchTrafficSnapshot,
   type TrafficRouteInput,
