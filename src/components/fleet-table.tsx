@@ -5,12 +5,14 @@ import { Panel } from '@/components/panel'
 import { StatusBadge } from '@/components/status-badge'
 import { trucks } from '@/lib/data'
 import { thirdPartyTrucks, useAllocation } from '@/lib/allocation'
+import { isValidEmail, setDriverEmail, useDriverEmails } from '@/lib/driver-emails'
 
 export function FleetTable() {
   const { lang } = useApp()
   const ar = lang === 'ar'
   const allocation = useAllocation()
   const byTruck = new Map(allocation.assignments.map((a) => [a.truckId, a]))
+  const driverEmails = useDriverEmails()
 
 
   return (
@@ -31,6 +33,9 @@ export function FleetTable() {
               <tr className="text-start">
                 <th className="px-4 py-3 font-semibold text-start">{ar ? 'الشاحنة' : 'Truck'}</th>
                 <th className="px-4 py-3 font-semibold text-start">{ar ? 'السائق' : 'Driver'}</th>
+                <th className="px-4 py-3 font-semibold text-start">
+                  {ar ? 'البريد الإلكتروني' : 'Email'}
+                </th>
                 <th className="px-4 py-3 font-semibold text-start">{ar ? 'المسار' : 'Route'}</th>
                 <th className="px-4 py-3 font-semibold text-start">{ar ? 'الحالة' : 'Status'}</th>
                 <th className="px-4 py-3 font-semibold text-start">
@@ -56,6 +61,20 @@ export function FleetTable() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-foreground">{truck.driver[lang]}</td>
+                  <td className="px-4 py-3">
+                    <input
+                      type="email"
+                      dir="ltr"
+                      value={driverEmails[truck.id] ?? ''}
+                      onChange={(event) => setDriverEmail(truck.id, event.target.value)}
+                      placeholder="driver@company.com"
+                      className={`w-48 rounded-lg border bg-card px-2.5 py-1.5 text-xs text-foreground outline-none focus:border-primary ${
+                        driverEmails[truck.id] && !isValidEmail(driverEmails[truck.id] ?? '')
+                          ? 'border-destructive'
+                          : 'border-border'
+                      }`}
+                    />
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">{truck.area[lang]}</td>
                   <td className="px-4 py-3">
                     <StatusBadge
@@ -116,6 +135,16 @@ export function FleetTable() {
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {ar ? 'مقدم خدمة متعاقد' : 'Contracted provider'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="email"
+                        dir="ltr"
+                        value={driverEmails[truck.id] ?? ''}
+                        onChange={(event) => setDriverEmail(truck.id, event.target.value)}
+                        placeholder="dispatch@thirdparty.com"
+                        className="w-48 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs text-foreground outline-none focus:border-primary"
+                      />
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {active
