@@ -79,6 +79,7 @@ function Kpi({
 export function DashboardOverview() {
   const { lang } = useApp()
   const ar = lang === 'ar'
+  const plan = useDailyPlan()
 
   const delayed = trucks.filter((t) => t.status === 'delayed').length
   const exceptions = trucks.filter((t) => t.status === 'exception').length
@@ -99,7 +100,7 @@ export function DashboardOverview() {
 
       <DailyUploadPanel />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <Kpi
           icon={Truck}
           label={ar ? 'الشاحنات النشطة' : 'Active trucks'}
@@ -120,6 +121,20 @@ export function DashboardOverview() {
           tone="warning"
         />
         <Kpi
+          icon={Gauge}
+          label={ar ? 'كفاءة توزيع المسافات' : 'Distance allocation efficiency'}
+          value={plan ? `${plan.distanceEfficiency}%` : '—'}
+          hint={
+            plan
+              ? ar
+                ? `${plan.totalDistanceKm} كم فعلي مقابل ${plan.idealDistanceKm} كم مثالي`
+                : `${plan.totalDistanceKm} km actual vs ${plan.idealDistanceKm} km ideal`
+              : ar
+                ? 'ارفع ملف اليوم لحساب المؤشر'
+                : 'Upload today’s file to compute it'
+          }
+        />
+        <Kpi
           icon={AlertTriangle}
           label={ar ? 'الاستثناءات' : 'Exceptions'}
           value={String(exceptions)}
@@ -128,7 +143,14 @@ export function DashboardOverview() {
         />
       </div>
 
+      <TrafficAlertsPanel />
+
+      <AiInsightsPanel />
+
+      <EmergencyPanel />
+
       <ThirdPartyPanel />
+
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <Panel className="p-5 lg:col-span-2">
