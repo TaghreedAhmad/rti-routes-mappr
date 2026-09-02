@@ -67,6 +67,14 @@ export function FleetTable() {
                       }
                     />
                   </td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">
+                      {ar ? 'أسطولنا' : 'Own fleet'}
+                      <span className="tabular-nums opacity-70">
+                        {byTruck.get(truck.id)?.utilization ?? 0}%
+                      </span>
+                    </span>
+                  </td>
                   <td className="px-4 py-3 tabular-nums text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
                       <Package className="size-3.5" />
