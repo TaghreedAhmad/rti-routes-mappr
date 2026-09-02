@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { useApp } from '@/components/app-providers'
 import { Panel } from '@/components/panel'
 import { stopOrders } from '@/lib/orders'
+import { planAggregatedOrders, useDailyPlan } from '@/lib/daily-plan'
 import { trucks } from '@/lib/data'
 
 export function OrderDetails({ selectedId }: { selectedId?: string | null }) {
@@ -11,7 +12,9 @@ export function OrderDetails({ selectedId }: { selectedId?: string | null }) {
   const ar = lang === 'ar'
   const [open, setOpen] = useState<string[]>([])
 
-  const orders = selectedId ? stopOrders.filter((o) => o.truckId === selectedId) : stopOrders
+  const plan = useDailyPlan()
+  const source = plan ? planAggregatedOrders(plan) : stopOrders
+  const orders = selectedId ? source.filter((o) => o.truckId === selectedId) : source
   const totalBoxes = orders.reduce((sum, o) => sum + o.totalBoxes, 0)
 
   function toggle(key: string) {

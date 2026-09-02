@@ -18,6 +18,7 @@ import { PageHeader } from '@/components/page-header'
 import { Panel } from '@/components/panel'
 import { StatusBadge } from '@/components/status-badge'
 import { ThirdPartyPanel } from '@/components/third-party-panel'
+import { DailyUploadPanel } from '@/components/daily-upload-panel'
 import { dailyOrders, fleetDistribution, performanceSeries, trucks } from '@/lib/data'
 
 const CHART = {
@@ -90,6 +91,8 @@ export function DashboardOverview() {
             : 'Operational performance for the Jeddah distribution fleet'
         }
       />
+
+      <DailyUploadPanel />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi
