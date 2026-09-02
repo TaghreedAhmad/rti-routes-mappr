@@ -1,9 +1,10 @@
-import { Fuel, Gauge, Package } from 'lucide-react'
+import { Building2, Fuel, Gauge, Package } from 'lucide-react'
 import { useApp } from '@/components/app-providers'
 import { PageHeader } from '@/components/page-header'
 import { Panel } from '@/components/panel'
 import { StatusBadge } from '@/components/status-badge'
 import { trucks } from '@/lib/data'
+import { thirdPartyTrucks, useAllocation } from '@/lib/allocation'
 
 export function FleetTable() {
   const { lang } = useApp()

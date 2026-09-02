@@ -120,6 +120,8 @@ export function DashboardOverview() {
         />
       </div>
 
+      <ThirdPartyPanel />
+
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <Panel className="p-5 lg:col-span-2">
           <h2 className="text-sm font-bold text-foreground">
