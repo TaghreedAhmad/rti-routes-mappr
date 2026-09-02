@@ -99,6 +99,71 @@ export function FleetTable() {
                   </td>
                 </tr>
               ))}
+
+              {thirdPartyTrucks.map((truck) => {
+                const assignment = byTruck.get(truck.id)
+                const active = assignment?.active ?? false
+                return (
+                  <tr
+                    key={truck.id}
+                    className={`border-t border-border hover:bg-muted/40 ${active ? '' : 'opacity-60'}`}
+                  >
+                    <td className="px-4 py-3 font-bold text-foreground">
+                      <span className="flex items-center gap-2">
+                        <Building2 className="size-3.5 shrink-0" style={{ color: truck.identityColor }} />
+                        {truck.name[lang]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {ar ? 'مقدم خدمة متعاقد' : 'Contracted provider'}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {active
+                        ? ar
+                          ? 'مسار الفائض'
+                          : 'Overflow route'
+                        : '—'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={
+                          active
+                            ? 'inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-2.5 py-1 text-[11px] font-bold text-warning'
+                            : 'inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold text-muted-foreground'
+                        }
+                      >
+                        {active ? (ar ? 'مفعّلة' : 'Activated') : ar ? 'غير مستخدمة' : 'Unused'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold"
+                        style={{
+                          background: `${truck.identityColor}1a`,
+                          color: truck.identityColor,
+                        }}
+                      >
+                        {ar ? 'طرف ثالث' : 'Third party'}
+                        <span className="tabular-nums opacity-70">
+                          {assignment?.utilization ?? 0}%
+                        </span>
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 tabular-nums text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Package className="size-3.5" />
+                        {assignment?.assigned ?? 0}/{truck.capacity}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">—</td>
+                    <td className="px-4 py-3 tabular-nums text-muted-foreground">
+                      {assignment?.utilization ?? 0}%
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">—</td>
+                    <td className="px-4 py-3 text-muted-foreground">—</td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
