@@ -111,19 +111,26 @@ export function ThirdPartyPanel() {
               </div>
               <span
                 className={
-                  assignment.active
-                    ? 'rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary'
-                    : 'rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold text-muted-foreground'
+                  assignment.activation === 'emergency'
+                    ? 'rounded-full bg-destructive/15 px-2.5 py-1 text-[11px] font-bold text-destructive'
+                    : assignment.active
+                      ? 'rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary'
+                      : 'rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold text-muted-foreground'
                 }
               >
-                {assignment.active
+                {assignment.activation === 'emergency'
                   ? ar
-                    ? `نشطة — خارجية (${assignment.utilization}%)`
-                    : `Active — external (${assignment.utilization}%)`
-                  : ar
-                    ? 'غير مستخدمة'
-                    : 'Unused'}
+                    ? `🚨 تفعيل طارئ (${assignment.utilization}%)`
+                    : `🚨 Emergency (${assignment.utilization}%)`
+                  : assignment.active
+                    ? ar
+                      ? `نشطة — خارجية (${assignment.utilization}%)`
+                      : `Active — external (${assignment.utilization}%)`
+                    : ar
+                      ? 'غير مستخدمة'
+                      : 'Unused'}
               </span>
+
             </li>
           )
         })}
